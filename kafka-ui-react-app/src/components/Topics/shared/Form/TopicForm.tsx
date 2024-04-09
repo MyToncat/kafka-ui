@@ -36,6 +36,17 @@ const CleanupPolicyOptions: Array<SelectOption> = [
   { value: 'compact,delete', label: 'Compact,Delete' },
 ];
 
+export const getCleanUpPolicyValue = (cleanUpPolicy?: string) => {
+  if (!cleanUpPolicy) return undefined;
+
+  return CleanupPolicyOptions.find((option: SelectOption) => {
+    return (
+      option.value.toString().replace(/,/g, '_') ===
+      cleanUpPolicy?.toLowerCase()
+    );
+  })?.value.toString();
+};
+
 const RetentionBytesOptions: Array<SelectOption> = [
   { value: NOT_SET, label: 'Not Set' },
   { value: BYTES_IN_GB, label: '1 GB' },
@@ -61,12 +72,7 @@ const TopicForm: React.FC<Props> = ({
   const navigate = useNavigate();
   const { clusterName } = useAppParams<{ clusterName: ClusterName }>();
   const getCleanUpPolicy =
-    CleanupPolicyOptions.find((option: SelectOption) => {
-      return (
-        option.value.toString().replace(/,/g, '_') ===
-        cleanUpPolicy?.toLowerCase()
-      );
-    })?.value || CleanupPolicyOptions[0].value;
+    getCleanUpPolicyValue(cleanUpPolicy) || CleanupPolicyOptions[0].value;
 
   const getRetentionBytes =
     RetentionBytesOptions.find((option: SelectOption) => {
@@ -87,9 +93,11 @@ const TopicForm: React.FC<Props> = ({
               <InputLabel htmlFor="topicFormName">Topic Name *</InputLabel>
               <Input
                 id="topicFormName"
+                autoFocus
                 name="name"
                 placeholder="Topic Name"
                 defaultValue={topicName}
+                autoComplete="off"
               />
               <FormError>
                 <ErrorMessage errors={errors} name="name" />
@@ -97,49 +105,52 @@ const TopicForm: React.FC<Props> = ({
             </S.NameField>
           </S.Column>
 
-          {!isEditing && (
-            <S.Column>
+          <S.Column>
+            {!isEditing && (
               <div>
                 <InputLabel htmlFor="topicFormNumberOfPartitions">
-                  Number of partitions *
+                  Number of Partitions *
                 </InputLabel>
                 <Input
                   id="topicFormNumberOfPartitions"
                   type="number"
-                  placeholder="Number of partitions"
+                  placeholder="Number of Partitions"
                   min="1"
                   name="partitions"
+                  positiveOnly
+                  integerOnly
                 />
                 <FormError>
                   <ErrorMessage errors={errors} name="partitions" />
                 </FormError>
               </div>
-              <div>
-                <InputLabel
-                  id="topicFormCleanupPolicyLabel"
-                  htmlFor="topicFormCleanupPolicy"
-                >
-                  Cleanup policy
-                </InputLabel>
-                <Controller
-                  defaultValue={CleanupPolicyOptions[0].value}
-                  control={control}
-                  name="cleanupPolicy"
-                  render={({ field: { name, onChange } }) => (
-                    <Select
-                      id="topicFormCleanupPolicy"
-                      aria-labelledby="topicFormCleanupPolicyLabel"
-                      name={name}
-                      value={getCleanUpPolicy}
-                      onChange={onChange}
-                      minWidth="250px"
-                      options={CleanupPolicyOptions}
-                    />
-                  )}
-                />
-              </div>
-            </S.Column>
-          )}
+            )}
+
+            <div>
+              <InputLabel
+                id="topicFormCleanupPolicyLabel"
+                htmlFor="topicFormCleanupPolicy"
+              >
+                Cleanup policy
+              </InputLabel>
+              <Controller
+                defaultValue={CleanupPolicyOptions[0].value}
+                control={control}
+                name="cleanupPolicy"
+                render={({ field: { name, onChange } }) => (
+                  <Select
+                    id="topicFormCleanupPolicy"
+                    aria-labelledby="topicFormCleanupPolicyLabel"
+                    name={name}
+                    value={getCleanUpPolicy}
+                    onChange={onChange}
+                    minWidth="250px"
+                    options={CleanupPolicyOptions}
+                  />
+                )}
+              />
+            </div>
+          </S.Column>
         </fieldset>
 
         <S.Column>
@@ -153,6 +164,8 @@ const TopicForm: React.FC<Props> = ({
               placeholder="Min In Sync Replicas"
               min="1"
               name="minInSyncReplicas"
+              positiveOnly
+              integerOnly
             />
             <FormError>
               <ErrorMessage errors={errors} name="minInSyncReplicas" />
@@ -169,6 +182,8 @@ const TopicForm: React.FC<Props> = ({
                 placeholder="Replication Factor"
                 min="1"
                 name="replicationFactor"
+                positiveOnly
+                integerOnly
               />
               <FormError>
                 <ErrorMessage errors={errors} name="replicationFactor" />
@@ -213,12 +228,14 @@ const TopicForm: React.FC<Props> = ({
             <InputLabel htmlFor="topicFormMaxMessageBytes">
               Maximum message size in bytes
             </InputLabel>
-            <Input
+            <S.MessageSizeInput
               id="topicFormMaxMessageBytes"
               type="number"
               placeholder="Maximum message size"
               min="1"
               name="maxMessageBytes"
+              positiveOnly
+              integerOnly
             />
             <FormError>
               <ErrorMessage errors={errors} name="maxMessageBytes" />
@@ -235,7 +252,7 @@ const TopicForm: React.FC<Props> = ({
         <S.ButtonWrapper>
           <Button
             type="button"
-            buttonType="primary"
+            buttonType="secondary"
             buttonSize="L"
             onClick={onCancel}
           >

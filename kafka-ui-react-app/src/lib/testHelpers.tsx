@@ -8,7 +8,7 @@ import {
 import fetchMock from 'fetch-mock';
 import { Provider } from 'react-redux';
 import { ThemeProvider } from 'styled-components';
-import theme from 'theme/theme';
+import { theme } from 'theme/theme';
 import {
   render,
   renderHook,
@@ -26,10 +26,7 @@ import {
 } from '@tanstack/react-query';
 import { ConfirmContextProvider } from 'components/contexts/ConfirmContext';
 import ConfirmationModal from 'components/common/ConfirmationModal/ConfirmationModal';
-import {
-  defaultGlobalSettingsValue,
-  GlobalSettingsContext,
-} from 'components/contexts/GlobalSettingsContext';
+import { GlobalSettingsContext } from 'components/contexts/GlobalSettingsContext';
 import { UserInfoRolesAccessContext } from 'components/contexts/UserInfoRolesAccessContext';
 
 import { RolesType, modifyRolesData } from './permissions';
@@ -41,6 +38,9 @@ interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
   userInfo?: {
     roles?: RolesType;
     rbacFlag: boolean;
+  };
+  globalSettings?: {
+    hasDynamicConfig: boolean;
   };
 }
 
@@ -82,7 +82,7 @@ export const TestQueryClientProvider: React.FC<PropsWithChildren<unknown>> = ({
  * @description it will create a UserInfo Provider that will actually
  * disable the rbacFlag , to user if you can pass it as an argument
  * */
-export const TestUserInfoProvider: React.FC<
+const TestUserInfoProvider: React.FC<
   PropsWithChildren<{ data?: { roles?: RolesType; rbacFlag: boolean } }>
 > = ({ children, data }) => {
   const contextValue = useMemo(() => {
@@ -114,6 +114,7 @@ const customRender = (
     }),
     initialEntries,
     userInfo,
+    globalSettings,
     ...renderOptions
   }: CustomRenderOptions = {}
 ) => {
@@ -122,7 +123,9 @@ const customRender = (
     children,
   }) => (
     <TestQueryClientProvider>
-      <GlobalSettingsContext.Provider value={defaultGlobalSettingsValue}>
+      <GlobalSettingsContext.Provider
+        value={globalSettings || { hasDynamicConfig: false }}
+      >
         <ThemeProvider theme={theme}>
           <TestUserInfoProvider data={userInfo}>
             <ConfirmContextProvider>

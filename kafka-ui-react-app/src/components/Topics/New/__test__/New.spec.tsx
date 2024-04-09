@@ -34,16 +34,12 @@ const renderComponent = (path: string) => {
     { initialEntries: [path] }
   );
 };
-
 const createTopicMock = jest.fn();
 describe('New', () => {
   beforeEach(() => {
     (useCreateTopic as jest.Mock).mockImplementation(() => ({
       createResource: createTopicMock,
     }));
-  });
-  afterEach(() => {
-    mockNavigate.mockClear();
   });
   it('checks header for create new', async () => {
     await act(() => {
@@ -52,33 +48,33 @@ describe('New', () => {
     expect(screen.getByRole('heading', { name: 'Create' })).toBeInTheDocument();
   });
 
-  it('checks header for copy', () => {
-    renderComponent(`${clusterTopicCopyPath(clusterName)}?name=test`);
+  it('checks header for copy', async () => {
+    await act(() => {
+      renderComponent(`${clusterTopicCopyPath(clusterName)}?name=test`);
+    });
     expect(screen.getByRole('heading', { name: 'Copy' })).toBeInTheDocument();
   });
   it('validates form', async () => {
-    await renderComponent(clusterTopicNewPath(clusterName));
+    renderComponent(clusterTopicNewPath(clusterName));
     await userEvent.type(screen.getByPlaceholderText('Topic Name'), topicName);
     await userEvent.clear(screen.getByPlaceholderText('Topic Name'));
     await userEvent.tab();
     await expect(
-      screen.getByText('name is a required field')
+      screen.getByText('Topic Name is required')
     ).toBeInTheDocument();
-
     await userEvent.type(
-      screen.getByLabelText('Number of partitions *'),
+      screen.getByLabelText('Number of Partitions *'),
       minValue
     );
-    await userEvent.clear(screen.getByLabelText('Number of partitions *'));
+    await userEvent.clear(screen.getByLabelText('Number of Partitions *'));
     await userEvent.tab();
     await expect(
-      screen.getByText('Number of partitions is required and must be a number')
+      screen.getByText('Number of Partitions is required and must be a number')
     ).toBeInTheDocument();
 
     expect(createTopicMock).not.toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
-
   it('validates form invalid name', async () => {
     renderComponent(clusterTopicNewPath(clusterName));
     await userEvent.type(
@@ -89,12 +85,11 @@ describe('New', () => {
       screen.getByText('Only alphanumeric, _, -, and . allowed')
     ).toBeInTheDocument();
   });
-
   it('submits valid form', async () => {
     renderComponent(clusterTopicNewPath(clusterName));
     await userEvent.type(screen.getByPlaceholderText('Topic Name'), topicName);
     await userEvent.type(
-      screen.getByLabelText('Number of partitions *'),
+      screen.getByLabelText('Number of Partitions *'),
       minValue
     );
     await userEvent.click(screen.getByText('Create topic'));

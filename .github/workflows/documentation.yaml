@@ -1,4 +1,4 @@
-name: Documentation
+name: "Infra: Docs: URL linter"
 on:
   pull_request:
     types:
